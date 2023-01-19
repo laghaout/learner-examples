@@ -1,0 +1,1 @@
+{"BUCKET": str, "ENDPOINT_ID": int, "PROJECT_NUMBER": int, "PROJECT_ID": str, "REGION": str}
