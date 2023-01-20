@@ -6,12 +6,17 @@ Created on Wed Dec 14 10:57:26 2022
 @author: Amine Laghaout
 """
 
+import gcsfs
+from google.cloud import aiplatform
 import learners.learner as lea
-from learners.utilities import EnvManager
+import learners.utilities as util
 import learners.visualizer as vis
+import numpy as np
 import os
 import pandas as pd
+import pickle
 import sklearn.metrics as sklmetrics
+import sys
 import tensorflow as tf
 import time
 try:
@@ -22,9 +27,9 @@ except BaseException:
 # %% Configuration parameters
 
 # Determine the environment parameters and the corresponding paths.
-env = EnvManager(container_params=('INSIDE_DOCKER_CONTAINER', 'INSIDE_GCP'))
+env = util.EnvManager(container_params=('INSIDE_DOCKER_CONTAINER', 'INSIDE_GCP'))
 env(**dict(
-    lesson_dir='lesson',   # Directory where to store the lesson.
+    lesson_dir='lesson',    # Directory where to store the lesson.
     dir_name='iris',        # Name of the current directory.
     ))
 
@@ -53,17 +58,12 @@ kwargs = dict(
         activation='relu',
         output_activation='softmax',
         ),
+    env=env,
     )
 
 # %% Learner class
 class Learner(lea.Learner):
-    """ Generic domain learner """
-
-    # def __init__(self):
-        
-    #     super().__init__(**kwargs)
-        
-    #     assert True # Validate parameters if necessary.
+    """ Iris classifier. """
 
     def wrangle(self, wrangler_class=wra.Wrangler):
 
@@ -145,7 +145,7 @@ class Learner(lea.Learner):
         delta_tau = time.time()
         
         if part in self.data.dataset.keys():
-            self.report['test'] = dict(
+            self.report[part] = dict(
                 zip(self.model.metrics_names,
                     self.model.evaluate(
                         self.data.dataset[part][self.data.features],
@@ -160,7 +160,7 @@ class Learner(lea.Learner):
         else:
             print(f"WARNING: There is no `{part}` data.")
             
-        self.report['test']['delta_tau'] = time.time() - delta_tau
+        self.report[part]['delta_tau'] = time.time() - delta_tau
         
         
     def test_report(
@@ -206,21 +206,123 @@ class Learner(lea.Learner):
                   metrics=metrics, 
                  # AUC=AUC,
                  ))
+        
+    def serve(self, data=None, part: str='serve'):
+        
+        super().serve()
+        
+        delta_tau = time.time()
 
+        #### Reload the model if it isn't attached to the learner.
+        
+        # TODO: Find a way to reload the model, both locally and on the GCP.
+        # if 'model' not in self.__dict__.keys():
+        #     if env.containers.INSIDE_GCP in (True, 'Yes'):
+        #         lesson_dir = os.path.join(*f'{env.paths.lesson_dir}'.split(os.path.sep)[2:])
+        #         pass
+        #     else:
+        #         lesson_dir = f'{self.env.paths.lesson_dir}'
+        #         self.model = tf.keras.models.load_model(
+        #             os.path.join(*[lesson_dir, 'model']))
+        
+        #### Determine whether we need online or batch prediction. 
+        
+        if data is None:
+            mode = "in-memory"
+            assert 'serve' in self.data.dataset.keys(), "No in-memory serving dataset"
+            print("Test on `self.data.dataset['serve']`.")
+            dataset = self.data.dataset[part]
+        elif isinstance(data, list):
+            mode = "online"
+            print("Online serving.")
+            dataset = data
+        elif isinstance(data, str):
+            mode = "batch"
+            print("Batch serving.")
+            dataset = util.rw_data(data)
+        else:
+            mode = "unknown"
+            print("Unknown serving mode.")
+        print()
+        
+        #### Perform the prediction.
+                
+        prediction_proba = None
+        prediction = None
+        
+        # We are inside the GCP.
+        if self.env.containers.INSIDE_GCP in (True, 'Yes'):
+            
+            print(f'Serving inside the GCP [mode: `{mode}`].')
+            if mode == "online":
+                endpoint = aiplatform.Endpoint(
+                    endpoint_name=f"projects/{self.env.cloud.PROJECT_NUMBER}/locations/{self.env.cloud.REGION}/endpoints/{self.env.cloud.ENDPOINT_ID}")
+                prediction_proba = endpoint.predict(instances=data).predictions
+                prediction = self.data.encoder.inverse_transform(
+                    np.array(prediction_proba))
+            elif mode == "batch":       # TODO
+                fs = gcsfs.GCSFileSystem(project=env.cloud.PROJECT_ID)
+                dataset = pd.read_csv(fs.open(data), delimiter=self.data.delimiter)
+                print(f"WARNING: Undetermined serving on the {mode} dataset.")
+            elif mode == "in-memory":   # TODO
+                print(f"WARNING: Undetermined serving on the {mode} dataset.")
+            else:                       # TODO
+                print(f"WARNING: Serving mode `{mode}`.")
+        
+        # We are not in the GCP.
+        else:
+            
+            print('Serving outside of any container [mode: `{mode}`].')
+            if mode == "online":        # TODO
+                print(f"WARNING: Undetermined serving on the {mode} dataset.")
+            elif mode == "batch":       # TODO
+                print(f"WARNING: Undetermined serving on the {mode} dataset.")
+            elif mode == "in-memory":   # TODO
+                print(f"WARNING: Undetermined serving on the {mode} dataset.")
+            else:                       # TODO
+                print(f"WARNING: Serving mode `{mode}`.")
+        
+        #### Convert the numerical predictions into categories, if necessary.
+        
+        
+        self.report[part]['delta_tau'] = time.time() - delta_tau
+        self.report[part]['data'] = data
+        
+        return dict(
+            prediction_proba=prediction_proba, 
+            prediction=prediction,
+            mode=mode)
+      
 #%% Run as script, not as a module.
 if __name__ == "__main__":
 
-    env.summary()  # TODO: Delete
-    # Learning outside the Docker container   
-    if not env.containers.INSIDE_DOCKER_CONTAINER:
-        learner = Learner(**kwargs)
-        learner(explore=True, select=False, train=True, test=True, serve=False)
-        datasets = learner.data.datasets
-        dataset = learner.data.dataset        
-        report = learner.report
-    else:
-        
-        learner = Learner(**kwargs)
-        learner(explore=True, select=False, train=True, test=True, serve=False)    
-    env.summary()  # TODO: Delete
+    print('sys.argv:', sys.argv)  # TODO: Delete  
+    learner = Learner(**kwargs)
 
+    # Serve
+    if 'serve' in sys.argv:
+        
+        data = [[5.7, 2.5, 5.0, 2.0], 
+                [6.3, 3.3, 6.0, 2.5],
+                [5.4, 3.9, 1.7, 0.4]]
+        
+        learner = Learner()
+        
+        if env.containers.INSIDE_GCP in (True, 'Yes'):
+            lesson_dir = os.path.join(
+                *f'{env.paths.lesson_dir}'.split(os.path.sep)[2:])
+            fs = gcsfs.GCSFileSystem(project=env.cloud.PROJECT_ID)
+            learner = pickle.load(fs.open(f'{lesson_dir}/learner.pkl', 'rb'))
+        else:
+            lesson_dir = env.paths.lesson_dir
+            learner = pickle.load(open(f'{lesson_dir}/learner.pkl', 'rb'))
+
+        output = learner.serve(data)
+        print('output:')
+        print(output)
+
+    # Train
+    else:
+
+        learner(explore=True, select=False, train=True, test=True, serve=False)    
+        learner.env.summary()  # TODO: Delete
