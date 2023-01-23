@@ -284,27 +284,41 @@ class Learner(lea.Learner):
         
         #### Convert the numerical predictions into categories, if necessary.
         
+        # TODO: ``prediction_proba`` should be assembled into a data frame 
+        # along with self.data.encoder.classes_
         
-        self.report[part]['delta_tau'] = time.time() - delta_tau
-        self.report[part]['data'] = data
-        
-        return dict(
-            prediction_proba=prediction_proba, 
+        self.report[part] = dict(
+            data=data,
+            prediction_proba=pd.DataFrame(
+                prediction_proba, columns=self.data.encoder.classes_), 
             prediction=prediction,
-            mode=mode)
+            mode=mode,
+            delta_tau=time.time() - delta_tau)
+    
+    def serve_report(self, part: str='serve'):
+        
+        super().serve_report()
+        
+        for k, v in self.report[part].items():
+            print(f"{k}:")
+            print(v)
+            print()
       
 #%% Run as script, not as a module.
 if __name__ == "__main__":
 
-    print('sys.argv:', sys.argv)  # TODO: Delete  
     learner = Learner(**kwargs)
 
     # Serve
     if 'serve' in sys.argv:
         
-        data = [[5.7, 2.5, 5.0, 2.0], 
-                [6.3, 3.3, 6.0, 2.5],
-                [5.4, 3.9, 1.7, 0.4]]
+        assert 2 <= len(sys.argv) <= 3, "Wrong number of CLI arguments."
+        if len(sys.argv) == 2:
+            data = [[5.7, 2.5, 5.0, 2.0], 
+                    [6.3, 3.3, 6.0, 2.5],
+                    [5.4, 3.9, 1.7, 0.4]]
+        elif len(sys.argv) == 3:
+            data = eval(sys.argv[2])
         
         learner = Learner()
         
@@ -312,17 +326,16 @@ if __name__ == "__main__":
             lesson_dir = os.path.join(
                 *f'{env.paths.lesson_dir}'.split(os.path.sep)[2:])
             fs = gcsfs.GCSFileSystem(project=env.cloud.PROJECT_ID)
+            # fs.ls(lesson_dir)
             learner = pickle.load(fs.open(f'{lesson_dir}/learner.pkl', 'rb'))
         else:
             lesson_dir = env.paths.lesson_dir
             learner = pickle.load(open(f'{lesson_dir}/learner.pkl', 'rb'))
 
-        output = learner.serve(data)
-        print('output:')
-        print(output)
+        learner.serve(data)
+        learner.serve_report()         
 
     # Train
     else:
 
         learner(explore=True, select=False, train=True, test=True, serve=False)    
-        learner.env.summary()  # TODO: Delete

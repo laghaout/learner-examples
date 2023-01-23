@@ -17,7 +17,7 @@ RUN pip3 install -U gcsfs
 RUN pip3 install protobuf==3.20.*  
 
 # Copies the trainer code to the docker image.
-COPY *.py *.md *.json /home/
+COPY *.py *.md cloud_params.json /home/
 
 ENV INSIDE_GCP Yes
 
