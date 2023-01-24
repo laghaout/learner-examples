@@ -170,7 +170,7 @@ class Learner(lea.Learner):
                
         super().test_report()
                  
-        labels = list(learner.data.encoder.classes_)
+        labels = list(self.data.encoder.classes_)
         comparison = self.report['test']['comparison'].copy()
         comparison.drop('error', inplace=True, axis=1)
                    
@@ -217,8 +217,8 @@ class Learner(lea.Learner):
         
         # TODO: Find a way to reload the model, both locally and on the GCP.
         # if 'model' not in self.__dict__.keys():
-        #     if env.containers.INSIDE_GCP in (True, 'Yes'):
-        #         lesson_dir = os.path.join(*f'{env.paths.lesson_dir}'.split(os.path.sep)[2:])
+        #     if self.env.containers.INSIDE_GCP in (True, 'Yes'):
+        #         lesson_dir = os.path.join(*f'{self.env.paths.lesson_dir}'.split(os.path.sep)[2:])
         #         pass
         #     else:
         #         lesson_dir = f'{self.env.paths.lesson_dir}'
@@ -261,8 +261,9 @@ class Learner(lea.Learner):
                 prediction = self.data.encoder.inverse_transform(
                     np.array(prediction_proba))
             elif mode == "batch":       # TODO
-                fs = gcsfs.GCSFileSystem(project=env.cloud.PROJECT_ID)
-                dataset = pd.read_csv(fs.open(data), delimiter=self.data.delimiter)
+                fs = gcsfs.GCSFileSystem(project=self.env.cloud.PROJECT_ID)
+                dataset = pd.read_csv(
+                    fs.open(data), delimiter=self.data.delimiter)
                 print(f"WARNING: Undetermined serving on the {mode} dataset.")
             elif mode == "in-memory":   # TODO
                 print(f"WARNING: Undetermined serving on the {mode} dataset.")
@@ -303,39 +304,36 @@ class Learner(lea.Learner):
             print(f"{k}:")
             print(v)
             print()
-      
+
 #%% Run as script, not as a module.
 if __name__ == "__main__":
 
     learner = Learner(**kwargs)
 
-    # Serve
-    if 'serve' in sys.argv:
-        
-        assert 2 <= len(sys.argv) <= 3, "Wrong number of CLI arguments."
-        if len(sys.argv) == 2:
-            data = [[5.7, 2.5, 5.0, 2.0], 
-                    [6.3, 3.3, 6.0, 2.5],
-                    [5.4, 3.9, 1.7, 0.4]]
-        elif len(sys.argv) == 3:
-            data = eval(sys.argv[2])
-        
-        learner = Learner()
-        
-        if env.containers.INSIDE_GCP in (True, 'Yes'):
-            lesson_dir = os.path.join(
-                *f'{env.paths.lesson_dir}'.split(os.path.sep)[2:])
-            fs = gcsfs.GCSFileSystem(project=env.cloud.PROJECT_ID)
-            # fs.ls(lesson_dir)
-            learner = pickle.load(fs.open(f'{lesson_dir}/learner.pkl', 'rb'))
-        else:
-            lesson_dir = env.paths.lesson_dir
-            learner = pickle.load(open(f'{lesson_dir}/learner.pkl', 'rb'))
-
-        learner.serve(data)
-        learner.serve_report()         
-
-    # Train
-    else:
-
+    # If the keyword "serve" isn't part of the arguments, run the whole 
+    # learner pipeline.
+    if 'serve' not in sys.argv:
         learner(explore=True, select=False, train=True, test=True, serve=False)    
+        
+    # If the first argument is "serve", use whatever comes next as the serving
+    # data.
+    elif 'serve' == sys.argv[1]:        
+        assert len(sys.argv) >= 3
+        try:
+            data = eval(sys.argv[2])
+        except BaseException:
+            print("Read a data file.")
+
+        # Retrieve the learner object, either from the GCP or locally.
+        lesson_dir = learner.env.paths.lesson_dir
+        if learner.env.containers.INSIDE_GCP in (True, 'Yes'):
+            lesson_dir = os.path.join(*f'{lesson_dir}'.split(os.path.sep)[2:])
+            fs = gcsfs.GCSFileSystem(project=learner.env.cloud.PROJECT_ID)
+            learner_file = fs.open(f'{lesson_dir}/learner.pkl', 'rb')
+        else:
+            learner_file = open(f'{lesson_dir}/learner.pkl', 'rb')
+        learner = pickle.load(learner_file)
+        
+        # Serve
+        learner.serve(data)
+        learner.serve_report()
