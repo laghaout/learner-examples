@@ -65,7 +65,7 @@ kwargs = dict(
 class Learner(lea.Learner):
     """ Iris classifier. """
 
-    def wrangle(self, wrangler_class=wra.Wrangler):
+    def wrangle(self, wrangler_class=wra.Wrangler) -> None:
 
         super().wrangle(wrangler_class)
         
@@ -114,7 +114,7 @@ class Learner(lea.Learner):
             optimizer=self.hyperparams['optimizer'],
             metrics=self.hyperparams['metrics'])       
         
-    def train(self, part: str='train'):
+    def train(self, part: str='train') -> None:
 
         super().train()
 
@@ -138,7 +138,7 @@ class Learner(lea.Learner):
         
         self.report[part]['delta_tau'] = time.time() - delta_tau 
 
-    def test(self, part: str='test'):
+    def test(self, part: str='test') -> None:
 
         super().test()
 
@@ -163,10 +163,7 @@ class Learner(lea.Learner):
         self.report[part]['delta_tau'] = time.time() - delta_tau
         
         
-    def test_report(
-            self,
-            average=None,
-            print2screen=True):
+    def test_report(self, average=None, print2screen=True) -> None:
                
         super().test_report()
                  
@@ -231,15 +228,13 @@ class Learner(lea.Learner):
             mode = "in-memory"
             assert 'serve' in self.data.dataset.keys(), "No in-memory serving dataset"
             print("Test on `self.data.dataset['serve']`.")
-            dataset = self.data.dataset[part]
+            data = self.data.dataset[part]
         elif isinstance(data, list):
             mode = "online"
             print("Online serving.")
-            dataset = data
-        elif isinstance(data, str):
+        elif isinstance(data, str) or isinstance(data, int):
             mode = "batch"
             print("Batch serving.")
-            dataset = util.rw_data(data)
         else:
             mode = "unknown"
             print("Unknown serving mode.")
@@ -260,10 +255,11 @@ class Learner(lea.Learner):
                 prediction_proba = endpoint.predict(instances=data).predictions
                 prediction = self.data.encoder.inverse_transform(
                     np.array(prediction_proba))
-            elif mode == "batch":       # TODO
-                fs = gcsfs.GCSFileSystem(project=self.env.cloud.PROJECT_ID)
-                dataset = pd.read_csv(
-                    fs.open(data), delimiter=self.data.delimiter)
+            elif mode == "batch":       
+                # fs = gcsfs.GCSFileSystem(project=self.env.cloud.PROJECT_ID)
+                # data = pd.read_csv(
+                #     fs.open(data), delimiter=self.data.delimiter)
+                self.batch_prediction_job = self.serve_batch2bq(data)
                 print(f"WARNING: Undetermined serving on the {mode} dataset.")
             elif mode == "in-memory":   # TODO
                 print(f"WARNING: Undetermined serving on the {mode} dataset.")
@@ -284,15 +280,14 @@ class Learner(lea.Learner):
                 print(f"WARNING: Serving mode `{mode}`.")
         
         #### Convert the numerical predictions into categories, if necessary.
-        
-        # TODO: ``prediction_proba`` should be assembled into a data frame 
-        # along with self.data.encoder.classes_
+                
+        prediction_proba=pd.DataFrame(
+            prediction_proba, columns=self.data.encoder.classes_)
+        prediction_proba[self.data.target_name] = prediction
         
         self.report[part] = dict(
             data=data,
-            prediction_proba=pd.DataFrame(
-                prediction_proba, columns=self.data.encoder.classes_), 
-            prediction=prediction,
+            prediction=prediction_proba,
             mode=mode,
             delta_tau=time.time() - delta_tau)
     
@@ -304,6 +299,33 @@ class Learner(lea.Learner):
             print(f"{k}:")
             print(v)
             print()
+
+    def serve_batch2bq(self, model_number, machine_type='n1-standard-4'):
+    
+        # Initialize connection
+        aiplatform.init(location=self.env.cloud.REGION)
+        
+        # Get model that will make a batch prediction
+        model_id = f"projects/{self.env.cloud.PROJECT_NUMBER}/locations/{self.env.cloud.REGION}/models/{model_number}"
+        model = aiplatform.Model(model_id)
+        
+        # Check the supported batch prediction jobs input formats
+        model.supported_input_storage_formats
+        
+        # Define required arguments for batch prediction job
+        job_display_name = self.env.paths.dir_name
+        bigquery_source = f'bq://{self.env.cloud.PROJECT_ID}.{self.env.paths.dir_name}.serve'
+        bigquery_destination_prefix = f'bq://{self.env.cloud.PROJECT_ID}.{self.env.paths.dir_name}.predict'
+        
+        # Create batch prediction job
+        batch_prediction_job = model.batch_predict(
+            job_display_name=job_display_name,
+            bigquery_source=bigquery_source,
+            bigquery_destination_prefix=bigquery_destination_prefix,
+            machine_type=machine_type
+        )
+        
+        return batch_prediction_job
 
 #%% Run as script, not as a module.
 if __name__ == "__main__":
@@ -319,10 +341,12 @@ if __name__ == "__main__":
     # data.
     elif 'serve' == sys.argv[1]:        
         assert len(sys.argv) >= 3
-        try:
-            data = eval(sys.argv[2])
-        except BaseException:
-            print("Read a data file.")
+        if isinstance(sys.argv[2], str):
+            try:
+                data = eval(sys.argv[2])
+            except BaseException:
+                print('NOTE: The ``data`` passed is a string and should be',
+                      'considered as the path to a BigQuery table.')
 
         # Retrieve the learner object, either from the GCP or locally.
         lesson_dir = learner.env.paths.lesson_dir
