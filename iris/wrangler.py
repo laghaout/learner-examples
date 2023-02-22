@@ -32,6 +32,14 @@ class Wrangler(wra.Wrangler):
         self.encoder.fit(list(set(self.dataset[self.target_name])))
         
         return report
+
+    def explore(self, part: str='train'):
+        
+        report = super().explore()
+        
+        print(self.dataset[part].info())
+        
+        return report
         
     def split(self, split_sizes=None):
 

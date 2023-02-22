@@ -335,7 +335,8 @@ if __name__ == "__main__":
     # If the keyword "serve" isn't part of the arguments, run the whole 
     # learner pipeline.
     if 'serve' not in sys.argv:
-        learner(explore=True, select=False, train=True, test=True, serve=False)    
+        learner(explore=True, select=False, train=False, test=False, serve=False)    
+        report = learner.report
         
     # If the first argument is "serve", use whatever comes next as the serving
     # data.
