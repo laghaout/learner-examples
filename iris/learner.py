@@ -48,12 +48,12 @@ kwargs = dict(
         ),
     hyperparams=dict(
         early_stopping_threshold=.9999,
-        epochs=40,  # 100
-        batch_size=32,
+        epochs=145,  # 100
+        batch_size=16,
         loss='categorical_crossentropy',
         optimizer='adam',
         metrics=['accuracy'],
-        hidden_units=[512],
+        hidden_units=[16],
         output_units=3,
         activation='relu',
         output_activation='softmax',
@@ -90,8 +90,17 @@ class Learner(lea.Learner):
                         'validation accuracy so cancelling training!')
                     self.model.stop_training = True
 
+        model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=os.path.join(*[self.lesson_dir, 'checkpoints']),
+            save_weights_only=False,
+            verbose=0,
+            monitor=f"val_{learner.hyperparams['metrics'][0]}",  
+            mode='max',
+            save_best_only=True)
+
         self.callbacks = [
             EarlyStopping(),
+            model_checkpoint_callback,
             tf.keras.callbacks.TensorBoard(
                 log_dir=self.lesson_dir, histogram_freq=1, profile_batch=0,
                 write_images=True)]
@@ -326,6 +335,12 @@ class Learner(lea.Learner):
         )
         
         return batch_prediction_job
+    
+    def save(self):
+        
+        super().save(
+            self.lesson_dir, 
+            delete_before_save=['model'])    
 
 #%% Run as script, not as a module.
 if __name__ == "__main__":
@@ -335,7 +350,7 @@ if __name__ == "__main__":
     # If the keyword "serve" isn't part of the arguments, run the whole 
     # learner pipeline.
     if 'serve' not in sys.argv:
-        learner(explore=True, select=False, train=False, test=False, serve=False)    
+        learner(explore=True, select=False, train=True, test=True, serve=False)    
         report = learner.report
         
     # If the first argument is "serve", use whatever comes next as the serving
@@ -362,3 +377,16 @@ if __name__ == "__main__":
         # Serve
         learner.serve(data)
         learner.serve_report()
+
+#%%
+
+# Check whether the saved model or the check point has a better accuracy.
+if False:  
+    learner.save()
+    model = tf.keras.models.load_model('lesson/model')
+    checkpoint = tf.keras.models.load_model('lesson/checkpoints')
+    data = learner.data.dataset['test']
+    X = data[learner.data.features]
+    y = learner.data.encoder.transform(data[learner.data.target_name])
+    print('model:', model.evaluate(X, y))
+    print('checkpoint:', checkpoint.evaluate(X, y))

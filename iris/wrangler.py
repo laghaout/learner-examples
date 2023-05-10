@@ -27,9 +27,11 @@ class Wrangler(wra.Wrangler):
         
         self.datasets['raw'] = self.dataset.copy()       
         
+        self.split()
+        
         from sklearn.preprocessing import LabelBinarizer
         self.encoder = LabelBinarizer()
-        self.encoder.fit(list(set(self.dataset[self.target_name])))
+        self.encoder.fit(list(set(self.dataset['train'][self.target_name])))
         
         return report
 
