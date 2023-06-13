@@ -1,5 +1,8 @@
 *~
 */*~
+*/*/*~
 */__pycache__/
 */cloud_params.json
 ./*/cloud_params.json
+./*/*/cloud_params.json
+./*/*/__pycache__/
