@@ -8,11 +8,11 @@ export IMAGE_TAG=IMAGE_TAG
 export PROJECT_ID=$(gcloud config list project --format "value(core.project)")
 export IMAGE_URI=${REGION}/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}
 
-# Clean up artifacts
-./clean.sh
-
 # Run tests.
 pytest
+
+# Clean up artifacts
+./clean.sh
 
 # Build the Docker image.
 docker build -f Dockerfile -t ${IMAGE_URI} ./

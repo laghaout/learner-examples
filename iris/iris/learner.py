@@ -104,7 +104,7 @@ class Learner(lea.Learner):
             filepath=os.path.join(*[self.lesson_dir, "checkpoints"]),
             save_weights_only=False,
             verbose=0,
-            monitor=f"val_{learner.hyperparams['metrics'][0]}",
+            monitor=f"val_{self.hyperparams['metrics'][0]}",
             mode="max",
             save_best_only=True,
         )

@@ -1,8 +1,7 @@
 import os
 import pytest
 from learners import utilities as util
-from learners import learner as lea
-
+from iris import learner as lea
 
 @pytest.fixture
 def learner():
@@ -57,8 +56,7 @@ def learner():
     return learner
 
 
-# %%
-
+# %% Tests.
 
 def test_learner_has_report(learner) -> None:
     """Test that the learner object has a report attribute."""
@@ -78,3 +76,8 @@ def test_something_else(learner) -> None:
     with pytest.raises(Exception):
         if True:
             raise Exception("Running some error code.")
+            
+def test_is_actually_learning(learner, threshold=.8) -> None:
+    """ Test that the learner is actually learning and not just guessing. """
+    
+    assert learner.report['test']['accuracy'] > threshold
