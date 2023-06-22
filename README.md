@@ -11,23 +11,23 @@
 -   [`quadrant`](./quadrant): Determine the quadrant of a point in `N`-dimensional space.
 -   [`sequence`](./sequence): Classify sequences.
 
--   \`<project>\`
-    -   \`Dockerfile\`
-    -   \`README.md\`
-    -   \`clean.sh\`
-    -   \`docker-compose.yml\`
-    -   \`devops.sh\`
-    -   \`pyproject.toml\`
-    -   \`run.sh\`: Alternative to \`docker-compose\`. To be deprecated.
-    -   \`.env\`: List fo environment variables
-    -   \`<project>/\`
-    -   \`<tests>/\`
-        -   \`\_<sub>init</sub>\_<sub>.py</sub>\`
-        -   \`test\_<some series of tests>.py\`
+-   `<project>`
+    -   `Dockerfile`
+    -   `README.md`
+    -   `clean.sh`
+    -   `docker-compose.yml`
+    -   `devops.sh`
+    -   `pyproject.toml`
+    -   `run.sh`: Alternative to `docker-compose`. To be deprecated.
+    -   `.env`: List fo environment variables
+    -   `<project>/`
+    -   `<tests>/`
+        -   `__init__.py`
+        -   `test_<some series of tests>.py`
 
-1.  Run \`sh devops.sh\` to
+1.  Run `sh devops.sh` to
     -   *test*,
     -   *clean artifacts*, and
-    -   create a *pip package* (if \`pip\` is passed as an argument).
-2.  To run a particular service specified in the \`docker-compose.yml\`, run \`docker compose run <service>\`.
+    -   create a *pip package* (if `pip` is passed as an argument).
+2.  To run a particular service specified in the `docker-compose.yml`, run `docker compose run <service>`.
 
