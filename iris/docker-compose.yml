@@ -1,6 +1,9 @@
 version: '0'
 services:
   iris:
+    build:
+      context: .
+      dockerfile: Dockerfile  
     image: $IMAGE_URI
     working_dir: /home/
     environment:
@@ -14,6 +17,9 @@ services:
         max-size: "200k"
         max-file: "10"
   iris-shell:
+    build:
+      context: .
+      dockerfile: Dockerfile    
     image: $IMAGE_URI
     entrypoint: /bin/bash
     working_dir: /home/
