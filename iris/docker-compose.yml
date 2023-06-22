@@ -1,0 +1,31 @@
+version: '0'
+services:
+  iris:
+    image: $IMAGE_URI
+    working_dir: /home/
+    environment:
+      - INSIDE_GCP=$INSIDE_GCP
+    volumes:
+      - $DATA_DIR_LOC:$DATA_DIR_REM
+      - $MAP_DIR_LOC:$MAP_DIR_REM
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+  iris-shell:
+    image: $IMAGE_URI
+    entrypoint: /bin/bash
+    working_dir: /home/
+    environment:
+      - INSIDE_GCP=$INSIDE_GCP
+    volumes:
+      - $DATA_DIR_LOC:$DATA_DIR_REM
+      - $MAP_DIR_LOC:$MAP_DIR_REM
+    tty: true
+    stdin_open: true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"

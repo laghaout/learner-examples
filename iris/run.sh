@@ -10,25 +10,8 @@
 # | [···] | Yes | serve [...] in the GCP        |
 # |-------+-----+-------------------------------|
 
-# Image name
-export REGION=europe-west4-docker.pkg.dev
-export REPO_NAME=map
-export IMAGE_NAME=iris
-export IMAGE_TAG=IMAGE_TAG
-export PROJECT_ID=$(gcloud config list project --format "value(core.project)")
-export IMAGE_URI=${REGION}/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}
-
-# Data directory on the host.
-DATA_DIR_LOC=/home/$(whoami)/Data/
-
-# Data directory on the container.
-DATA_DIR_REM=/home/Data/
-
-# Map directory on the host.
-MAP_DIR_LOC=$(pwd)/
-
-# Map directory on the container.
-MAP_DIR_REM=/home/
+# Import the environment variables.
+. ./.env
 
 if [ -z "$1" ]; then
     echo "Launch the learning pipeline locally."
