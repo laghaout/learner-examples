@@ -8,8 +8,7 @@
 - [[./quadrant][=quadrant=]]: Determine the quadrant of a point in =N=-dimensional space.
 - [[./sequence][=sequence=]]: Classify sequences.
 
-# Directory structure
-
+* Directory structure
 - =<project>=
   - =Dockerfile=
   - =README.md=
@@ -24,7 +23,7 @@
     - =__init__.py=
     - =test_<some series of tests>.py=
 
-# Steps
+* Steps
 1. Run =sh devops.sh= to
    - /test/,
    - /clean artifacts/, and

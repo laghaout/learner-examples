@@ -1,7 +1,8 @@
 
 # Table of Contents
 
-
+1.  [Directory structure](#org11beea7)
+2.  [Steps](#org4330d5a)
 
 -   [`starter-code`](./starter-code): Starter code for any learner
 -   [`ballistics`](./ballistics): Perform forensic ballistics.
@@ -10,6 +11,11 @@
 -   [`iris`](./iris): Classify flowers.
 -   [`quadrant`](./quadrant): Determine the quadrant of a point in `N`-dimensional space.
 -   [`sequence`](./sequence): Classify sequences.
+
+
+<a id="org11beea7"></a>
+
+# Directory structure
 
 -   `<project>`
     -   `Dockerfile`
@@ -24,6 +30,11 @@
     -   `<tests>/`
         -   `__init__.py`
         -   `test_<some series of tests>.py`
+
+
+<a id="org4330d5a"></a>
+
+# Steps
 
 1.  Run `sh devops.sh` to
     -   *test*,
