@@ -33,8 +33,8 @@ env = util.EnvManager(
 )
 env(
     **dict(
-        lesson_dir="lesson",  # Directory where to store the lesson.
-        dir_name="iris",  # Name of the current directory.
+        lesson_dir="lesson",    # Directory where to store the lesson.
+        dir_name="iris",        # Name of the current directory.
     )
 )
 
@@ -59,7 +59,7 @@ kwargs = dict(
     ),
     hyperparams=dict(
         early_stopping_threshold=0.9999,
-        epochs=145,  # 100
+        epochs=14,  # 145
         batch_size=16,
         loss="categorical_crossentropy",
         optimizer="adam",
@@ -401,7 +401,16 @@ class Learner(lea.Learner):
         return batch_prediction_job
 
     def save(self):
-        super().save(self.lesson_dir, delete_before_save=["model"])
+        
+        super().save(
+            self.lesson_dir, 
+            delete_before_save=[
+                "model",
+                "data.dataset",
+                "data.datasets",
+                "data.lookup",
+                "callbacks"])
+
 
 
 # %% Run as script, not as a module.
