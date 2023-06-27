@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Import the environment variables.
+# Set the environment variables.
 . ./.env
 
 # Run all the hooks.
@@ -9,8 +9,11 @@ pre-commit run
 # Run tests.
 pytest
 
-# Clean up artifacts
+# Clean up artifacts.
 ./clean.sh
+
+# Dockerize.
+docker compose build
 
 # Generate the distribution and install the package locally [OPTIONAL].
 for arg in "$@"
@@ -23,4 +26,7 @@ do
     fi
 done
 
+# Push to PyPi: https://packaging.python.org/en/latest/tutorials/packaging-projects/
 
+# Clean up artifacts.
+./clean.sh

@@ -18,7 +18,7 @@ RUN pip3 install protobuf==3.20.*  # Temporarily downgrade `protobuf` to avoid <
 
 # Copies the trainer code to the docker image.
 COPY iris/ home
-COPY README.md pyproject.toml .
+COPY Dockerfile *.* .* .
 
 # Sets up the entry point to invoke the trainer.
 ENTRYPOINT ["python3", "iris/learner.py"]
