@@ -17,8 +17,9 @@ RUN pip3 install --user --upgrade pip
 RUN pip3 install protobuf==3.20.*  # Temporarily downgrade `protobuf` to avoid <https://stackoverflow.com/questions/72441758/typeerror-descriptors-cannot-not-be-created-directly>
 
 # Copies the trainer code to the docker image.
-COPY iris/ home
-COPY Dockerfile *.* .* .
+COPY Dockerfile *.yml *.sh *.toml README.* .env ./
+COPY iris/ iris
+COPY tests/ tests
 
 # Sets up the entry point to invoke the trainer.
 ENTRYPOINT ["python3", "iris/learner.py"]
