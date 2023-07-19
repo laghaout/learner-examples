@@ -1,19 +1,19 @@
 
 # Table of Contents
 
-1.  [Directory structure](#org11beea7)
-2.  [Steps](#org4330d5a)
+1.  [Directory structure](#org60fa66e)
+2.  [Steps](#org6ee9de9)
 
 -   [`starter-code`](./starter-code): Starter code for any learner
 -   [`ballistics`](./ballistics): Perform forensic ballistics.
 -   [`cellular-automata`](./cellular-automata): Predict the behaviour of cellular automata.
 -   [`equation-validity`](./equation-validity): Verify the validity of mathematical equations.
--   [`iris`](./iris): Classify flowers.
+-   [`iris`](./iris): Classify flowers based on iris measurements.
 -   [`quadrant`](./quadrant): Determine the quadrant of a point in `N`-dimensional space.
 -   [`sequence`](./sequence): Classify sequences.
 
 
-<a id="org11beea7"></a>
+<a id="org60fa66e"></a>
 
 # Directory structure
 
@@ -32,7 +32,7 @@
         -   `test_<some series of tests>.py`
 
 
-<a id="org4330d5a"></a>
+<a id="org6ee9de9"></a>
 
 # Steps
 

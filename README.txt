@@ -4,7 +4,7 @@
 - [[./ballistics][=ballistics=]]: Perform forensic ballistics.
 - [[./cellular-automata][=cellular-automata=]]: Predict the behaviour of cellular automata.
 - [[./equation-validity][=equation-validity=]]: Verify the validity of mathematical equations.
-- [[./iris][=iris=]]: Classify flowers.
+- [[./iris][=iris=]]: Classify flowers based on iris measurements.
 - [[./quadrant][=quadrant=]]: Determine the quadrant of a point in =N=-dimensional space.
 - [[./sequence][=sequence=]]: Classify sequences.
 
