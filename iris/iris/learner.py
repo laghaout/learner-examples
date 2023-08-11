@@ -41,9 +41,7 @@ env(
 kwargs = dict(
     lesson_dir=env.paths.lesson_dir,
     data_params=dict(
-        data_source=os.path.join(
-            env.paths.data_dir, f"{env.paths.dir_name}.csv"
-        ),
+        data_source=os.path.join(env.paths.data_dir, 'train.csv'),
         nrows=None,
         delimiter="\t",
         shuffle_seed=41,
@@ -59,7 +57,7 @@ kwargs = dict(
     ),
     hyperparams=dict(
         early_stopping_threshold=0.9999,
-        epochs=14,  # 145
+        epochs=145,  # 145
         batch_size=16,
         loss="categorical_crossentropy",
         optimizer="adam",
