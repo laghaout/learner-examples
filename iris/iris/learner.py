@@ -6,8 +6,8 @@ Created on Wed Dec 14 10:57:26 2022
 @author: Amine Laghaout
 """
 
-import gcsfs
-from google.cloud import aiplatform
+# import gcsfs
+# from google.cloud import aiplatform
 import learners.learner as lea
 import learners.utilities as util
 import learners.visualizer as vis
@@ -33,15 +33,15 @@ env = util.EnvManager(
 )
 env(
     **dict(
-        lesson_dir="lesson",    # Directory where to store the lesson.
-        dir_name="iris",        # Name of the current directory.
+        lesson_dir="lesson",  # Directory where to store the lesson.
+        dir_name="iris",  # Name of the current directory.
     )
 )
 
 kwargs = dict(
     lesson_dir=env.paths.lesson_dir,
     data_params=dict(
-        data_source=os.path.join(env.paths.data_dir, 'train.csv'),
+        data_source=os.path.join(env.paths.data_dir, "train.csv"),
         nrows=None,
         delimiter="\t",
         shuffle_seed=41,
@@ -399,16 +399,16 @@ class Learner(lea.Learner):
         return batch_prediction_job
 
     def save(self):
-        
         super().save(
-            self.lesson_dir, 
+            self.lesson_dir,
             delete_before_save=[
                 "model",
                 "data.dataset",
                 "data.datasets",
                 "data.lookup",
-                "callbacks"])
-
+                "callbacks",
+            ],
+        )
 
 
 # %% Run as script, not as a module.
